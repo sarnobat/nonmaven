@@ -114,7 +114,6 @@ class MyClassVisitor extends ClassVisitor {
       }
     }
     if (jc == null) {
-//      System.err.println("WARN: Couldn't find " + childClassNameQualified);
     } else {
       relationships.addContainmentRelationship(classToVisit.getClassName(), jc);
     }
