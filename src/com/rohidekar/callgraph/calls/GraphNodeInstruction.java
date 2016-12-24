@@ -3,7 +3,7 @@ package com.rohidekar.callgraph.calls;
 class GraphNodeInstruction extends GraphNode {
   private MyInstruction instruction;
 
-  public GraphNodeInstruction(MyInstruction parentMethodInstruction) {
+  GraphNodeInstruction(MyInstruction parentMethodInstruction) {
     super(parentMethodInstruction);
     if (parentMethodInstruction == null) {
       throw new IllegalAccessError("Do not allow this. It will interfere with drawing a graph");

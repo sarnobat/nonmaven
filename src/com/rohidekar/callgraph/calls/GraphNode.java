@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-public abstract class GraphNode {
+abstract class GraphNode {
 
   // TODO: for better performance, create a parentsClosure set
   private Set<GraphNode> parents = new LinkedHashSet<GraphNode>();
@@ -13,11 +13,11 @@ public abstract class GraphNode {
   boolean isVisited = false;
   private Object nodeData;
 
-  public GraphNode(Object nodeData) {
+  GraphNode(Object nodeData) {
     this.nodeData = nodeData;
   }
 
-  public boolean isVisited() {
+  boolean isVisited() {
     return isVisited;
   }
 
