@@ -3,7 +3,6 @@
 package com.rohidekar.callgraph.calls;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import gr.gousiosg.javacg.stat.ClassVisitor;
 import gr.gousiosg.javacg.stat.MethodVisitor;
 
 import java.io.File;
@@ -22,6 +21,9 @@ import java.util.jar.JarFile;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.EmptyVisitor;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
@@ -43,7 +45,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -84,6 +85,47 @@ public class Main {
 
 	private static class Relationships {
 
+		private static class ClassVisitor extends EmptyVisitor {
+
+		    private JavaClass clazz;
+		    private ConstantPoolGen constants;
+		    private String classReferenceFormat;
+		    
+		    public ClassVisitor(JavaClass jc) {
+		        clazz = jc;
+		        constants = new ConstantPoolGen(clazz.getConstantPool());
+		        classReferenceFormat = "C:" + clazz.getClassName() + " %s";
+		    }
+
+		    public void visitJavaClass(JavaClass jc) {
+		        jc.getConstantPool().accept(this);
+		        Method[] methods = jc.getMethods();
+		        for (int i = 0; i < methods.length; i++)
+		            methods[i].accept(this);
+		    }
+
+		    public void visitConstantPool(ConstantPool constantPool) {
+		        for (int i = 0; i < constantPool.getLength(); i++) {
+		            Constant constant = constantPool.getConstant(i);
+		            if (constant == null)
+		                continue;
+		            if (constant.getTag() == 7) {
+		                String referencedClass = 
+		                    constantPool.constantToString(constant);
+		                System.out.println(String.format(classReferenceFormat,
+		                        referencedClass));
+		            }
+		        }
+		    }
+
+		    public void visitMethod(Method method) {
+		        MethodGen mg = new MethodGen(method, clazz.getClassName(), constants);
+		        MethodVisitor visitor = new MethodVisitor(mg, clazz);
+		        visitor.start(); 
+		    }
+
+		}
+
 		// The top level package with classes in it
 		int minPackageDepth = Integer.MAX_VALUE;
 
@@ -109,7 +151,7 @@ public class Main {
 
 		private Set<String> classNames = new HashSet<String>();
 
-		public Relationships(String resource) {
+		Relationships(String resource) {
 			Map<String, JavaClass> javaClasses = JavaClassGenerator
 					.getJavaClassesFromResource(resource);
 			this.classNameToJavaClassMap = ImmutableMap.copyOf(javaClasses);
@@ -124,7 +166,7 @@ public class Main {
 
 		private static class JavaClassGenerator {
 
-			public static Map<String, JavaClass> getJavaClassesFromResource(String resource) {
+			static Map<String, JavaClass> getJavaClassesFromResource(String resource) {
 				Map<String, JavaClass> javaClasses = new HashMap<String, JavaClass>();
 				boolean isJar = resource.endsWith("jar");
 				if (isJar) {
@@ -203,12 +245,12 @@ public class Main {
 
 		private static class MyClassVisitor extends ClassVisitor {
 
-			private JavaClass classToVisit;
-			private Relationships relationships;
+			private final JavaClass classToVisit;
+			private final Relationships relationships;
 
 			private Map<String, JavaClass> visitedClasses = new HashMap<String, JavaClass>();
 
-			public MyClassVisitor(JavaClass classToVisit, Relationships relationships) {
+			MyClassVisitor(JavaClass classToVisit, Relationships relationships) {
 				super(classToVisit);
 				this.classToVisit = classToVisit;
 				relationships.addPackageOf(classToVisit);
@@ -351,26 +393,23 @@ public class Main {
 					if (!(iClass instanceof ObjectType)) {
 						return;
 					}
-					// method calls
-					{
-						ObjectType childClass = (ObjectType) iClass;
-						MyInstruction target = new MyInstruction(childClass, unqualifiedMethodName);
-						relationships.addMethodCall(parentMethodQualifiedName, target,
-								target.printInstruction(true));
-						if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
-							relationships.addMethodDefinition(new MyInstruction(childClass
-									.getClassName(), unqualifiedMethodName));
-						}
-						// link to superclass method - note: this will not work
-						// for the top-level
-						// method (i.e.
-						// parentMethodQualifiedName). Only for target.
-						// We can't do it for the superclass without a JavaClass
-						// object. We don't
-						// know which superclass
-						// the method overrides.
-						linkMethodToSuperclassMethod(unqualifiedMethodName, target);
+					ObjectType childClass = (ObjectType) iClass;
+					MyInstruction target = new MyInstruction(childClass, unqualifiedMethodName);
+					relationships.addMethodCall(parentMethodQualifiedName, target,
+							target.printInstruction(true));
+					if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
+						relationships.addMethodDefinition(new MyInstruction(childClass
+								.getClassName(), unqualifiedMethodName));
 					}
+					// link to superclass method - note: this will not work
+					// for the top-level
+					// method (i.e.
+					// parentMethodQualifiedName). Only for target.
+					// We can't do it for the superclass without a JavaClass
+					// object. We don't
+					// know which superclass
+					// the method overrides.
+					linkMethodToSuperclassMethod(unqualifiedMethodName, target);
 					// class dependencies for method calls
 				}
 
@@ -497,20 +536,19 @@ public class Main {
 			this.isMethodVisited.put(childMethodQualifiedName, false);
 		}
 
-		@VisibleForTesting
-		boolean isVisitedMethod(String childMethodQualifiedName) {
+		private boolean isVisitedMethod(String childMethodQualifiedName) {
 			if (!isMethodVisited.keySet().contains(childMethodQualifiedName)) {
 				addUnvisitedMethod(childMethodQualifiedName);
 			}
 			return isMethodVisited.get(childMethodQualifiedName);
 		}
 
-		public void addContainmentRelationship(String parentClassFullName, JavaClass javaClass) {
+		void addContainmentRelationship(String parentClassFullName, JavaClass javaClass) {
 			classNameToFieldTypesMultiMap.put(parentClassFullName, javaClass);
 			addContainmentRelationshipStringOnly(parentClassFullName, javaClass.getClassName());
 		}
 
-		public void addContainmentRelationshipStringOnly(String parentClassName,
+		void addContainmentRelationshipStringOnly(String parentClassName,
 				String childClassName) {
 			if (parentClassName.equals("java.lang.Object")) {
 				// throw new IllegalAccessError();
@@ -524,14 +562,14 @@ public class Main {
 			this.classNames.add(childClassName);
 		}
 
-		public void updateMinPackageDepth(JavaClass javaClass) {
+		void updateMinPackageDepth(JavaClass javaClass) {
 			int packageDepth = getPackageDepth(javaClass.getClassName());
 			if (packageDepth < minPackageDepth) {
 				minPackageDepth = packageDepth;
 			}
 		}
 
-		public static int getPackageDepth(String qualifiedClassName) {
+		static int getPackageDepth(String qualifiedClassName) {
 			String packageName = ClassUtils.getPackageName(qualifiedClassName);
 			int periodCount = StringUtils.countMatches(packageName, ".");
 			int packageDepth = periodCount + 1;
@@ -539,13 +577,13 @@ public class Main {
 
 		}
 
-		public void addPackageOf(JavaClass classToVisit) {
+		void addPackageOf(JavaClass classToVisit) {
 			String pkgFullName = classToVisit.getPackageName();
 			String parentPktFullName = ClassUtils.getPackageName(pkgFullName);
 			this.parentPackageNameToChildPackageNameMultiMap.put(parentPktFullName, pkgFullName);
 		}
 
-		public JavaClass getClassDef(String aClassFullName) {
+		JavaClass getClassDef(String aClassFullName) {
 			JavaClass jc = null;
 			try {
 				jc = Repository.lookupClass(aClassFullName);
@@ -559,7 +597,7 @@ public class Main {
 			return jc;
 		}
 
-		public Collection<JavaClass> getParentClassesAndInterfaces(JavaClass childClass) {
+		Collection<JavaClass> getParentClassesAndInterfaces(JavaClass childClass) {
 			Collection<JavaClass> superClassesAndInterfaces = new HashSet<JavaClass>();
 			String[] interfaceNames = childClass.getInterfaceNames();
 			for (String interfaceName : interfaceNames) {
@@ -584,15 +622,15 @@ public class Main {
 			return ImmutableSet.copyOf(superClassesAndInterfaces);
 		}
 
-		public boolean deferContainmentVisit(JavaClass parentClassToVisit,
+		boolean deferContainmentVisit(JavaClass parentClassToVisit,
 				String childClassQualifiedName) {
 			return this.deferredChildContainments.add(new DeferredChildContainment(
 					parentClassToVisit, childClassQualifiedName));
 		}
 
 		private static class DeferredChildContainment {
-			private String childClassQualifiedName;
-			private JavaClass parentClass;
+			private final String childClassQualifiedName;
+			private final JavaClass parentClass;
 
 			DeferredChildContainment(JavaClass parentClass, String childClassQualifiedName) {
 				this.childClassQualifiedName = childClassQualifiedName;
@@ -608,11 +646,11 @@ public class Main {
 			}
 		}
 
-		public Set<DeferredChildContainment> getDeferredChildContainment() {
+		Set<DeferredChildContainment> getDeferredChildContainment() {
 			return ImmutableSet.copyOf(this.deferredChildContainments);
 		}
 
-		public void validate() {
+		void validate() {
 			if (this.allMethodNameToMyInstructionMap.keySet().contains(
 					"com.rohidekar.callgraph.GraphNodeInstruction.getMethodNameQualified()")) {
 				throw new IllegalAccessError("No such thing");
@@ -624,11 +662,11 @@ public class Main {
 
 		}
 
-		public void deferSuperMethodRelationshipCapture(DeferredSuperMethod deferredSuperMethod) {
+		void deferSuperMethodRelationshipCapture(DeferredSuperMethod deferredSuperMethod) {
 			this.deferredSuperMethod.add(deferredSuperMethod);
 		}
 
-		public Set<DeferredSuperMethod> getDeferSuperMethodRelationships() {
+		Set<DeferredSuperMethod> getDeferSuperMethodRelationships() {
 			return ImmutableSet.copyOf(this.deferredSuperMethod);
 		}
 
@@ -661,18 +699,18 @@ public class Main {
 
 		private Map<String, Boolean> isMethodVisited = new HashMap<String, Boolean>();
 
-		public void setVisitedMethod(String parentMethodQualifiedName) {
+		void setVisitedMethod(String parentMethodQualifiedName) {
 			if (this.isMethodVisited.keySet().contains(parentMethodQualifiedName)) {
 				this.isMethodVisited.remove(parentMethodQualifiedName);
 			}
 			this.isMethodVisited.put(parentMethodQualifiedName, true);
 		}
 
-		public MyInstruction getMethod(String qualifiedMethodName) {
+		MyInstruction getMethod(String qualifiedMethodName) {
 			return this.allMethodNameToMyInstructionMap.get(qualifiedMethodName);
 		}
 
-		public void addMethodDefinition(MyInstruction myInstructionImpl) {
+		void addMethodDefinition(MyInstruction myInstructionImpl) {
 			allMethodNameToMyInstructionMap.put(myInstructionImpl.getMethodNameQualified(),
 					myInstructionImpl);
 		}
@@ -787,25 +825,23 @@ public class Main {
 						return;
 					}
 					// method calls
-					{
-						ObjectType childClass = (ObjectType) iClass;
-						MyInstruction target = new MyInstruction(childClass, unqualifiedMethodName);
-						relationships.addMethodCall(parentMethodQualifiedName, target,
-								target.printInstruction(true));
-						if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
-							relationships.addMethodDefinition(new MyInstruction(childClass
-									.getClassName(), unqualifiedMethodName));
-						}
-						// link to superclass method - note: this will not work
-						// for the top-level
-						// method (i.e.
-						// parentMethodQualifiedName). Only for target.
-						// We can't do it for the superclass without a JavaClass
-						// object. We don't
-						// know which superclass
-						// the method overrides.
-						linkMethodToSuperclassMethod(unqualifiedMethodName, target);
+					ObjectType childClass = (ObjectType) iClass;
+					MyInstruction target = new MyInstruction(childClass, unqualifiedMethodName);
+					relationships.addMethodCall(parentMethodQualifiedName, target,
+							target.printInstruction(true));
+					if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
+						relationships.addMethodDefinition(new MyInstruction(childClass
+								.getClassName(), unqualifiedMethodName));
 					}
+					// link to superclass method - note: this will not work
+					// for the top-level
+					// method (i.e.
+					// parentMethodQualifiedName). Only for target.
+					// We can't do it for the superclass without a JavaClass
+					// object. We don't
+					// know which superclass
+					// the method overrides.
+					linkMethodToSuperclassMethod(unqualifiedMethodName, target);
 					// class dependencies for method calls
 				}
 
@@ -848,7 +884,7 @@ public class Main {
 					}
 				}
 
-				public static MyInstruction getInstruction(JavaClass parentClassOrInterface,
+				static MyInstruction getInstruction(JavaClass parentClassOrInterface,
 						String unqualifiedChildMethodName, Relationships relationships) {
 					String methodName = MyInstruction.getQualifiedMethodName(
 							parentClassOrInterface.getClassName(), unqualifiedChildMethodName);
@@ -863,23 +899,23 @@ public class Main {
 
 			private static class MyClassVisitor extends ClassVisitor {
 
-				private JavaClass classToVisit;
-				private Relationships relationships;
+				private final JavaClass classToVisit;
+				private final Relationships relationships;
 
-				private Map<String, JavaClass> visitedClasses = new HashMap<String, JavaClass>();
+				private final Map<String, JavaClass> visitedClasses = new HashMap<String, JavaClass>();
 
-				public MyClassVisitor(JavaClass classToVisit, Relationships relationships) {
+				MyClassVisitor(JavaClass classToVisit, Relationships relationships) {
 					super(classToVisit);
 					this.classToVisit = classToVisit;
 					relationships.addPackageOf(classToVisit);
 					this.relationships = relationships;
 				}
 
-				public void setVisited(JavaClass javaClass) {
+				void setVisited(JavaClass javaClass) {
 					this.visitedClasses.put(javaClass.getClassName(), javaClass);
 				}
 
-				public boolean isVisited(JavaClass javaClass) {
+				boolean isVisited(JavaClass javaClass) {
 					return this.visitedClasses.values().contains(javaClass);
 				}
 
@@ -918,7 +954,7 @@ public class Main {
 					}
 				}
 
-				public static List<String> getInterfacesAndSuperClasses(JavaClass javaClass) {
+				static List<String> getInterfacesAndSuperClasses(JavaClass javaClass) {
 					List<String> parentClasses = Lists.asList(javaClass.getSuperclassName(),
 							javaClass.getInterfaceNames());
 					return parentClasses;
@@ -1014,27 +1050,23 @@ public class Main {
 						if (!(iClass instanceof ObjectType)) {
 							return;
 						}
-						// method calls
-						{
-							ObjectType childClass = (ObjectType) iClass;
-							MyInstruction target = new MyInstruction(childClass,
-									unqualifiedMethodName);
-							relationships.addMethodCall(parentMethodQualifiedName, target,
-									target.printInstruction(true));
-							if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
-								relationships.addMethodDefinition(new MyInstruction(childClass
-										.getClassName(), unqualifiedMethodName));
-							}
-							// link to superclass method - note: this will not
-							// work for the top-level
-							// method (i.e.
-							// parentMethodQualifiedName). Only for target.
-							// We can't do it for the superclass without a
-							// JavaClass object. We don't
-							// know which superclass
-							// the method overrides.
-							linkMethodToSuperclassMethod(unqualifiedMethodName, target);
+						ObjectType childClass = (ObjectType) iClass;
+						MyInstruction target = new MyInstruction(childClass, unqualifiedMethodName);
+						relationships.addMethodCall(parentMethodQualifiedName, target,
+								target.printInstruction(true));
+						if (relationships.getMethod(this.parentMethodQualifiedName) == null) {
+							relationships.addMethodDefinition(new MyInstruction(childClass
+									.getClassName(), unqualifiedMethodName));
 						}
+						// link to superclass method - note: this will not
+						// work for the top-level
+						// method (i.e.
+						// parentMethodQualifiedName). Only for target.
+						// We can't do it for the superclass without a
+						// JavaClass object. We don't
+						// know which superclass
+						// the method overrides.
+						linkMethodToSuperclassMethod(unqualifiedMethodName, target);
 						// class dependencies for method calls
 					}
 
@@ -1102,7 +1134,7 @@ public class Main {
 					}
 				}
 
-				public static void addContainmentRelationship(JavaClass classToVisit,
+				static void addContainmentRelationship(JavaClass classToVisit,
 						String childClassNameQualified, Relationships relationships,
 						boolean allowDeferral) {
 					JavaClass jc = null;
@@ -1132,11 +1164,11 @@ public class Main {
 
 			private String _qualifiedMethodName;
 
-			public MyInstruction(ObjectType iClass, String unqualifiedMethodName) {
+			MyInstruction(ObjectType iClass, String unqualifiedMethodName) {
 				this(iClass.getClassName(), unqualifiedMethodName);
 			}
 
-			public MyInstruction(String classNameQualified, String unqualifiedMethodName) {
+			MyInstruction(String classNameQualified, String unqualifiedMethodName) {
 				String qualifiedMethodName = getQualifiedMethodName(classNameQualified,
 						unqualifiedMethodName);
 				this._qualifiedMethodName = qualifiedMethodName;
@@ -1146,15 +1178,15 @@ public class Main {
 				}
 			}
 
-			public static String getQualifiedMethodName(MethodGen methodGen, JavaClass visitedClass) {
+			static String getQualifiedMethodName(MethodGen methodGen, JavaClass visitedClass) {
 				return getQualifiedMethodName(visitedClass.getClassName(), methodGen.getName());
 			}
 
-			public static String getQualifiedMethodName(String className, String methodName) {
+			static String getQualifiedMethodName(String className, String methodName) {
 				return className + "." + methodName + "()";
 			}
 
-			public String getMethodNameQualified() {
+			String getMethodNameQualified() {
 				return this._qualifiedMethodName;
 			}
 
@@ -1174,7 +1206,7 @@ public class Main {
 				return this._qualifiedMethodName;
 			}
 
-			public String printInstruction(boolean printPackage) {
+			String printInstruction(boolean printPackage) {
 				String methodNameUnqualified = getMethodNameUnqualified();
 				String classNameQualified = getClassNameQualified();
 				String classNameUnqualified = ClassUtils.getShortCanonicalName(classNameQualified);
@@ -1185,15 +1217,15 @@ public class Main {
 						+ methodNameUnqualified;
 			}
 
-			public String getClassNameQualified() {
+			String getClassNameQualified() {
 				return ClassUtils.getPackageCanonicalName(this.toString());
 			}
 
-			public String getMethodNameUnqualified() {
+			String getMethodNameUnqualified() {
 				return getMethodNameUnqualified(this.getMethodNameQualified());
 			}
 
-			public static String getMethodNameUnqualified(String qualifiedMethodName) {
+			static String getMethodNameUnqualified(String qualifiedMethodName) {
 				return ClassUtils.getShortCanonicalName(qualifiedMethodName);
 			}
 		}
@@ -1202,7 +1234,7 @@ public class Main {
 
 	private static class RelationshipToGraphTransformerCallHierarchy {
 
-		public static void printCallGraph(Relationships relationships) {
+		static void printCallGraph(Relationships relationships) {
 			relationships.validate();
 		}
 	}
