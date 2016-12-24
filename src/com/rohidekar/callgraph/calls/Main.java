@@ -8,7 +8,6 @@ import gr.gousiosg.javacg.stat.MethodVisitor;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -426,31 +425,6 @@ public class Main {
 			this.classNames.add(childClassName);
 		}
 
-		public Collection<String> getAllClassNames() {
-			return ImmutableSet.copyOf(classNames);// classNameToJavaClassMap.keySet();
-		}
-
-		public Collection<String> getAllMethodCallers() {
-			return ImmutableSet.copyOf(callingMethodToMethodInvocationMultiMap.keySet());
-		}
-
-		public Collection<MyInstruction> getCalledMethods(String parentMethodNameKey) {
-			return ImmutableSet.copyOf(callingMethodToMethodInvocationMultiMap
-					.get(parentMethodNameKey));
-		}
-
-		public Collection<JavaClass> getContainedClasses(String parentClassNameKey) {
-			return ImmutableSet.copyOf(classNameToFieldTypesMultiMap.get(parentClassNameKey));
-		}
-
-		public Collection<String> getContainedClassNames(String parentClassNameKey) {
-			return ImmutableSet.copyOf(classNameToFieldTypeNamesMultiMap.get(parentClassNameKey));
-		}
-
-		public int getMinPackageDepth() {
-			return minPackageDepth;
-		}
-
 		public void updateMinPackageDepth(JavaClass javaClass) {
 			int packageDepth = getPackageDepth(javaClass.getClassName());
 			if (packageDepth < minPackageDepth) {
@@ -548,14 +522,6 @@ public class Main {
 					javaClass));
 		}
 
-		public Set<DeferredParentContainment> getDeferredParentContainments() {
-			return ImmutableSet.copyOf(deferredParentContainments);
-		}
-
-		public Set<String> getAllMethodNames() {
-			return ImmutableSet.copyOf(allMethodNameToMyInstructionMap.keySet());
-		}
-
 		private Map<String, Boolean> isMethodVisited = new HashMap<String, Boolean>();
 
 		public void setVisitedMethod(String parentMethodQualifiedName) {
@@ -574,23 +540,9 @@ public class Main {
 					myInstructionImpl);
 		}
 
-		public Collection<String> getPackagesKeySet() {
-			return ImmutableSet.copyOf(this.parentPackageNameToChildPackageNameMultiMap.keySet());
-		}
-
-		public Collection<String> getChildPackagesOf(String parentPackage) {
-			return ImmutableSet.copyOf(this.parentPackageNameToChildPackageNameMultiMap
-					.get(parentPackage));
-		}
 		private static class DeferredRelationships {
 
 			  static void handleDeferredRelationships(Relationships relationships) {
-			    for (DeferredParentContainment aDeferredParentContainment :
-			        relationships.getDeferredParentContainments()) {
-			      JavaClass parentClass =
-			          relationships.getClassDef(aDeferredParentContainment.getParentClassName());
-			      //handleDeferredParentContainment(relationships, aDeferredParentContainment, parentClass);
-			    }
 			    for (DeferredChildContainment containment : relationships.getDeferredChildContainment()) {
 			      MyClassVisitor.addContainmentRelationship(
 			          containment.getParentClass(), containment.getClassQualifiedName(), relationships, false);
@@ -995,23 +947,6 @@ public class Main {
 				    }
 				  }
 				}
-
-			  @Deprecated
-			  private static void handleDeferredParentContainment(Relationships relationships,
-			      DeferredParentContainment aDeferredParentContainment, JavaClass parentClass) {
-			    if (parentClass == null) {
-			      try {
-			        parentClass = Repository.lookupClass(aDeferredParentContainment.getParentClassName());
-			      } catch (ClassNotFoundException e) {
-			    	  // This still occurs
-			    	  e.printStackTrace();
-			      }
-			    }
-			    if (parentClass != null) {
-			      MyClassVisitor.addContainmentRelationship(parentClass,
-			          aDeferredParentContainment.getChildClass().getClassName(), relationships, false);
-			    }
-			  }
 			}
 
 	}
@@ -1019,64 +954,7 @@ public class Main {
 	private static class RelationshipToGraphTransformerCallHierarchy {
 
 		public static void printCallGraph(Relationships relationships) {
-			Map<String, GraphNode> allMethodNamesToMethodNodes = RelationshipToGraphTransformerCallHierarchy
-					.determineCallHierarchy(relationships);
 			relationships.validate();
-			Set<GraphNode> rootMethodNodes = RelationshipToGraphTransformerCallHierarchy
-					.findRootCallers(allMethodNamesToMethodNodes);
-		}
-
-		private static Set<GraphNode> findRootCallers(Map<String, GraphNode> allMethodNamesToMethods) {
-			Set<GraphNode> rootMethodNodes;
-			rootMethodNodes = new HashSet<GraphNode>();
-			for (GraphNode aNode : allMethodNamesToMethods.values()) {
-				Set<GraphNode> roots = new HashSet<GraphNode>();
-				RootsVisitor rootsVisitor = new RootsVisitor();
-				RootFinder.getRoots(aNode, roots, rootsVisitor);
-				rootMethodNodes.addAll(roots);
-			}
-			return rootMethodNodes;
-		}
-
-		private static Map<String, GraphNode> determineCallHierarchy(Relationships relationships) {
-			relationships.validate();
-			Map<String, GraphNode> allMethodNamesToMethods = new LinkedHashMap<String, GraphNode>();
-			// Create a custom call graph structure from the multimap (flatten)
-			for (String parentMethodNameKey : relationships.getAllMethodCallers()) {
-				GraphNodeInstruction parentEnd = (GraphNodeInstruction) allMethodNamesToMethods
-						.get(parentMethodNameKey);
-				if (parentEnd == null) {
-					MyInstruction parentMethodInstruction = relationships
-							.getMethod(parentMethodNameKey);
-					if (parentMethodInstruction == null) {
-						continue;
-					}
-					parentEnd = new GraphNodeInstruction(parentMethodInstruction);
-					allMethodNamesToMethods.put(parentMethodNameKey, parentEnd);
-					if (parentEnd.toString().contains("Millis")
-							&& parentMethodNameKey.contains("Repository")) {
-						throw new IllegalAccessError();
-					}
-				}
-				if (parentEnd.toString().contains("Millis")
-						&& parentMethodNameKey.contains("Repository")) {
-					throw new IllegalAccessError();
-				}
-				Collection<MyInstruction> calledMethods = relationships
-						.getCalledMethods(parentMethodNameKey);
-				for (MyInstruction childMethod : calledMethods) {
-					GraphNodeInstruction child = (GraphNodeInstruction) allMethodNamesToMethods
-							.get(childMethod.getMethodNameQualified());
-					if (child == null) {
-						child = new GraphNodeInstruction(childMethod);
-						allMethodNamesToMethods.put(childMethod.getMethodNameQualified(), child);
-					}
-					parentEnd.addChild(child);
-					child.addParent(parentEnd);
-				}
-			}
-			relationships.validate();
-			return allMethodNamesToMethods;
 		}
 	}
 
