@@ -3,7 +3,6 @@
 package com.rohidekar.callgraph.calls;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import gr.gousiosg.javacg.stat.MethodVisitor;
 
 import java.io.File;
 import java.io.IOException;
