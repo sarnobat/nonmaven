@@ -40,7 +40,7 @@ import org.apache.bcel.generic.MethodGen;
  * The simplest of class visitors, invokes the method visitor class for each
  * method found.
  */
-class ClassVisitor extends EmptyVisitor {
+public class ClassVisitor extends EmptyVisitor {
 
     private JavaClass clazz;
     private ConstantPoolGen constants;

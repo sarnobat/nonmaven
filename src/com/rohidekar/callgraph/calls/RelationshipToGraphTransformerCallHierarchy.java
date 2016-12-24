@@ -1,7 +1,5 @@
 package com.rohidekar.callgraph.calls;
 
-import com.rohidekar.callgraph.common.*;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -19,7 +17,6 @@ class RelationshipToGraphTransformerCallHierarchy {
     relationships.validate();
     Set<GraphNode> rootMethodNodes = RelationshipToGraphTransformerCallHierarchy
         .findRootCallers(allMethodNamesToMethodNodes);
-    TreePrinterCalls.printTrees(relationships, rootMethodNodes);
   }
 
   private static Set<GraphNode> findRootCallers(Map<String, GraphNode> allMethodNamesToMethods) {
