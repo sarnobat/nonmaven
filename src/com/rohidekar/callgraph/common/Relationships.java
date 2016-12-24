@@ -54,7 +54,6 @@ public class Relationships {
     Map<String, JavaClass> javaClasses = JavaClassGenerator.getJavaClassesFromResource(resource);
     this.classNameToJavaClassMap = ImmutableMap.copyOf(javaClasses);
     for (JavaClass jc : this.classNameToJavaClassMap.values()) {
-//    	System.out.println("Relationships.Relationships()" + jc.getClassName());
       visitJavaClass(jc, this);
     }
     // These deferred relationships should not be necessary, but if you debug them you'll see that
@@ -81,7 +80,6 @@ public class Relationships {
     allMethodNameToMyInstructionMap.put(childMethodQualifiedName, childMethod);
     if (!parentMethodQualifiedName.equals(childMethodQualifiedName)) {// don't allow cycles
       if (parentMethodQualifiedName.contains("Millis")) {
-        System.out.println("");
       }
       callingMethodToMethodInvocationMultiMap.put(parentMethodQualifiedName, childMethod);
       System.out.println("\""+parentMethodQualifiedName +"\",\""+ childMethod + "\"");
@@ -184,7 +182,6 @@ public class Relationships {
       jc = Repository.lookupClass(aClassFullName);
     } catch (ClassNotFoundException e) {
       if (this.classNameToJavaClassMap.get(aClassFullName) != null) {
-//        System.err.println("We do need our own homemade repository. I don't know why");
       }
     }
     if (jc == null) {
@@ -216,7 +213,6 @@ public class Relationships {
       }
     }
     if (superClassesAndInterfaces.size() > 0) {
-//      System.err.println("Has a parent (" + childClass.getClassName() + ")");
     }
     return ImmutableSet.copyOf(superClassesAndInterfaces);
   }
@@ -253,7 +249,6 @@ public class Relationships {
   }
 
   public void deferParentContainment(String parentClassName, JavaClass javaClass) {
-//    System.err.println("Deferring " + parentClassName + " --> " + javaClass.getClassName());
     this.deferredParentContainments.add(new DeferredParentContainment(parentClassName, javaClass));
   }
 

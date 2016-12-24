@@ -103,8 +103,8 @@ class MyClassVisitor extends ClassVisitor {
     try {
       jc = Repository.lookupClass(childClassNameQualified);
     } catch (ClassNotFoundException e) {
-      
-        System.err.println(e);
+
+    	e.printStackTrace();
       if (allowDeferral) {
         relationships.deferContainmentVisit(classToVisit, childClassNameQualified);
       } else {
