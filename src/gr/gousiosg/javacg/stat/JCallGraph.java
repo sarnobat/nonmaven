@@ -36,6 +36,8 @@ import java.util.jar.JarFile;
 
 import org.apache.bcel.classfile.ClassParser;
 
+import com.rohidekar.callgraph.calls.ClassVisitor;
+
 /**
  * Constructs a callgraph out of a JAR archive. Can combine multiple archives
  * into a single call graph.
