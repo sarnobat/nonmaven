@@ -115,9 +115,6 @@ public class Relationships {
   }
 
   public void addContainmentRelationship(String parentClassFullName, JavaClass javaClass) {
-    if (!Ignorer.shouldIgnore(javaClass)) {
-//      System.err.println("CONTAINMENT: " + parentClassFullName + "--> " + javaClass.getClassName());
-    }
     classNameToFieldTypesMultiMap.put(parentClassFullName, javaClass);
     addContainmentRelationshipStringOnly(parentClassFullName, javaClass.getClassName());
   }

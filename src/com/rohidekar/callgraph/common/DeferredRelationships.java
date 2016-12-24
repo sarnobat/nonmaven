@@ -31,7 +31,6 @@ class DeferredRelationships {
         deferredSuperMethod.getparentClassOrInterface(),
         deferredSuperMethod.getunqualifiedMethodName(), relationships);
     if (parentInstruction == null) {
-//      System.err.println("Parent instruction was not found");
     } else {
       System.err.println(parentInstruction.getMethodNameQualified() + " -> "
             + deferredSuperMethod.gettarget().getMethodNameQualified());
@@ -50,9 +49,7 @@ class DeferredRelationships {
       try {
         parentClass = Repository.lookupClass(aDeferredParentContainment.getParentClassName());
       } catch (ClassNotFoundException e) {
-        if (!Ignorer.shouldIgnore(aDeferredParentContainment.getParentClassName())) {
-          System.err.println(aDeferredParentContainment.getParentClassName());
-        }
+    	  e.printStackTrace();
       }
     }
     if (parentClass != null) {

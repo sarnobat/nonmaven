@@ -39,18 +39,10 @@ public class RelationshipToGraphTransformerCallHierarchy {
     Map<String, GraphNode> allMethodNamesToMethods = new LinkedHashMap<String, GraphNode>();
     // Create a custom call graph structure from the multimap (flatten)
     for (String parentMethodNameKey : relationships.getAllMethodCallers()) {
-//      System.err
-//          .println("RelationshipToGraphTransformerCallHierarchy.determineCallHierarchy() - " + parentMethodNameKey);
-      if (Ignorer.shouldIgnore(parentMethodNameKey)) {
-        continue;
-      }
       GraphNodeInstruction parentEnd = (GraphNodeInstruction) allMethodNamesToMethods.get(parentMethodNameKey);
       if (parentEnd == null) {
         MyInstruction parentMethodInstruction = relationships.getMethod(parentMethodNameKey);
         if (parentMethodInstruction == null) {
-//          System.err.println(
-//              "RelationshipToGraphTransformerCallHierarchy.determineCallHierarchy() - WARNING: couldn't find instruction for  "
-//                  + parentMethodNameKey);
           continue;
         }
         parentEnd = new GraphNodeInstruction(parentMethodInstruction);
@@ -64,11 +56,6 @@ public class RelationshipToGraphTransformerCallHierarchy {
       }
       Collection<MyInstruction> calledMethods = relationships.getCalledMethods(parentMethodNameKey);
       for (MyInstruction childMethod : calledMethods) {
-        if (Ignorer.shouldIgnore(childMethod.getMethodNameQualified())) {
-          continue;
-        }
-//        System.err.println("RelationshipToGraphTransformerCallHierarchy.determineCallHierarchy() - -> "
-//            + childMethod.getMethodNameQualified());
         GraphNodeInstruction child = (GraphNodeInstruction) allMethodNamesToMethods
             .get(childMethod.getMethodNameQualified());
         if (child == null) {

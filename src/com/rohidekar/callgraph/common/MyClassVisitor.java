@@ -48,18 +48,12 @@ class MyClassVisitor extends ClassVisitor {
     if (javaClass.getClassName().equals("java.lang.Object")) {
       return;
     }
-    if (Ignorer.shouldIgnore(javaClass)) {
-      return;
-    }
     relationships.addPackageOf(javaClass);
     relationships.updateMinPackageDepth(javaClass);
 
     // Parent classes
     List<String> parentClasses = getInterfacesAndSuperClasses(javaClass);
     for (String anInterfaceName : parentClasses) {
-      if (Ignorer.shouldIgnore(anInterfaceName)) {
-        continue;
-      }
       JavaClass anInterface = relationships.getClassDef(anInterfaceName);
       if (anInterface == null) {
         relationships.deferParentContainment(anInterfaceName, javaClass);
@@ -105,9 +99,6 @@ class MyClassVisitor extends ClassVisitor {
 
   public static void addContainmentRelationship(JavaClass classToVisit,
       String childClassNameQualified, Relationships relationships, boolean allowDeferral) {
-    if (Ignorer.shouldIgnore(childClassNameQualified)) {
-      return;
-    }
     JavaClass jc = null;
     try {
       jc = Repository.lookupClass(childClassNameQualified);
@@ -119,9 +110,6 @@ class MyClassVisitor extends ClassVisitor {
       } else {
         jc = relationships.getClassDef(childClassNameQualified);
         if (jc == null) {
-          if (!Ignorer.shouldIgnore(childClassNameQualified)) {
-//            System.err.println("WARN: Still can't find " + childClassNameQualified);
-          }
         }
       }
     }
