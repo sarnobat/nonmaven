@@ -13,7 +13,7 @@ class DeferredRelationships {
         relationships.getDeferredParentContainments()) {
       JavaClass parentClass =
           relationships.getClassDef(aDeferredParentContainment.getParentClassName());
-      handleDeferredParentContainment(relationships, aDeferredParentContainment, parentClass);
+      //handleDeferredParentContainment(relationships, aDeferredParentContainment, parentClass);
     }
     for (DeferredChildContainment containment : relationships.getDeferredChildContainment()) {
       MyClassVisitor.addContainmentRelationship(
@@ -32,8 +32,8 @@ class DeferredRelationships {
         deferredSuperMethod.getunqualifiedMethodName(), relationships);
     if (parentInstruction == null) {
     } else {
-      System.err.println(parentInstruction.getMethodNameQualified() + " -> "
-            + deferredSuperMethod.gettarget().getMethodNameQualified());
+//      System.err.println(parentInstruction.getMethodNameQualified() + " -> "
+//            + deferredSuperMethod.gettarget().getMethodNameQualified());
       if (!relationships.methodCallExists(deferredSuperMethod.gettarget().getMethodNameQualified(),
           parentInstruction.getMethodNameQualified())) {
         relationships.addMethodCall(parentInstruction.getMethodNameQualified(),
@@ -43,12 +43,14 @@ class DeferredRelationships {
     }
   }
 
+  @Deprecated
   private static void handleDeferredParentContainment(Relationships relationships,
       DeferredParentContainment aDeferredParentContainment, JavaClass parentClass) {
     if (parentClass == null) {
       try {
         parentClass = Repository.lookupClass(aDeferredParentContainment.getParentClassName());
       } catch (ClassNotFoundException e) {
+    	  // This still occurs
     	  e.printStackTrace();
       }
     }
