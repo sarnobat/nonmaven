@@ -2,6 +2,7 @@
 
 package com.rohidekar.callgraph.packages;
 
+import com.rohidekar.callgraph.calls.GraphNode;
 import com.rohidekar.callgraph.common.*;
 
 import org.apache.commons.lang.ClassUtils;

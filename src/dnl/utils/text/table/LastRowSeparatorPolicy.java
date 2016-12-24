@@ -2,7 +2,7 @@ package dnl.utils.text.table;
 
 import javax.swing.table.TableModel;
 
-public class LastRowSeparatorPolicy extends SeparatorPolicy {
+class LastRowSeparatorPolicy extends SeparatorPolicy {
 
 	public LastRowSeparatorPolicy() {
 	}

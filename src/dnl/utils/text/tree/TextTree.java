@@ -9,7 +9,7 @@ import javax.swing.tree.TreeModel;
  * 
  * @author Daniel Orr
  */
-public class TextTree {
+class TextTree {
 
 	private TreeModel model;
 	private boolean showRoot = true;

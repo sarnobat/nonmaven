@@ -2,7 +2,7 @@ package dnl.utils.text.table;
 
 import java.io.PrintStream;
 
-public class TextTreeTableRenderer extends TextTableRenderer{
+class TextTreeTableRenderer extends TextTableRenderer{
 	
 	public TextTreeTableRenderer(TextTreeTable textTable) {
 		super(textTable);

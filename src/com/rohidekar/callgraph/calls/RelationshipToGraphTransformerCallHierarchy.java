@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Transforms relationships into graphs
  */
-public class RelationshipToGraphTransformerCallHierarchy {
+class RelationshipToGraphTransformerCallHierarchy {
 
   public static void printCallGraph(Relationships relationships) {
     Map<String, GraphNode> allMethodNamesToMethodNodes = RelationshipToGraphTransformerCallHierarchy

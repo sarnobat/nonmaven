@@ -1,5 +1,8 @@
 package com.rohidekar.callgraph.containments;
 
+import com.rohidekar.callgraph.calls.GraphNode;
+import com.rohidekar.callgraph.calls.Relationships;
+import com.rohidekar.callgraph.calls.RootFinder;
 import com.rohidekar.callgraph.common.*;
 
 import java.util.LinkedHashMap;
@@ -10,7 +13,7 @@ import javax.swing.tree.TreeModel;
 
 import com.google.common.collect.Multimap;
 
-public class RelationshipToGraphTransformerContainments {
+class RelationshipToGraphTransformerContainments {
 
   public static void printContainment(Relationships relationships) throws IllegalAccessError {
     Map<String, GraphNode> classNameToClassNodes = RelationshipToGraphTransformerContainments

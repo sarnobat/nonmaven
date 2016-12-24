@@ -6,12 +6,12 @@ import javax.swing.tree.TreeModel;
 
 import com.google.common.collect.Multimap;
 import com.rohidekar.callgraph.Main;
-import com.rohidekar.callgraph.common.GraphNode;
-import com.rohidekar.callgraph.common.Relationships;
+import com.rohidekar.callgraph.calls.GraphNode;
+import com.rohidekar.callgraph.calls.Relationships;
 
 import dnl.utils.text.tree.TextTree;
 
-public class TreePrinterContainments {
+class TreePrinterContainments {
 
   /**
    * Output suitable for D3

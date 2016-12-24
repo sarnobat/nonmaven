@@ -6,7 +6,7 @@ import javax.swing.table.TableModel;
 
 import org.apache.commons.lang.StringUtils;
 
-public class TextTableRenderer {
+class TextTableRenderer {
 
 	protected String[] formats;
 	protected int[] lengths;

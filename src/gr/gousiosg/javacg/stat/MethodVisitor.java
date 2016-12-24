@@ -48,7 +48,7 @@ import org.apache.bcel.generic.ReturnInstruction;
  * 
  * Class copied with modifications from CJKM: http://www.spinellis.gr/sw/ckjm/
  */
-public class MethodVisitor extends EmptyVisitor {
+class MethodVisitor extends EmptyVisitor {
 
     JavaClass visitedClass;
     private MethodGen mg;

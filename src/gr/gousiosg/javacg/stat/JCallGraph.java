@@ -43,7 +43,7 @@ import org.apache.bcel.classfile.ClassParser;
  * @author Georgios Gousios <gousiosg@gmail.com>
  * 
  */
-public class JCallGraph {
+class JCallGraph {
 
     public static void main(String[] args) {
         ClassParser cp;

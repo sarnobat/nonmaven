@@ -1,6 +1,6 @@
 package gr.gousiosg.javacg.dyn;
 
-public class Pair<A, B> {
+class Pair<A, B> {
 
     public A first;
     public B second;

@@ -2,6 +2,7 @@
 
 package com.rohidekar.callgraph.containments;
 
+import com.rohidekar.callgraph.calls.GraphNode;
 import com.rohidekar.callgraph.common.*;
 
 import javax.swing.tree.TreeModel;
@@ -10,7 +11,7 @@ import javax.swing.tree.TreeModel;
  * @author ssarnobat@google.com (Sridhar Sarnobat)
  *
  */
-public class TreeDepthCalculator {
+class TreeDepthCalculator {
   public static int getTreeDepth(TreeModel tree) {
     TreeDepthVisitor tdv = new TreeDepthVisitor();
     int childCount = tree.getChildCount(tree.getRoot());

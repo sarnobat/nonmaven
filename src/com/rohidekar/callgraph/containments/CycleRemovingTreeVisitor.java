@@ -3,7 +3,7 @@ package com.rohidekar.callgraph.containments;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.rohidekar.callgraph.common.GraphNode;
+import com.rohidekar.callgraph.calls.GraphNode;
 
 class CycleRemovingTreeVisitor {
 

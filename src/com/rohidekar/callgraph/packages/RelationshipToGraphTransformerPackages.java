@@ -1,5 +1,10 @@
 package com.rohidekar.callgraph.packages;
 
+import com.rohidekar.callgraph.calls.GraphNode;
+import com.rohidekar.callgraph.calls.MyTreeModel;
+import com.rohidekar.callgraph.calls.Relationships;
+import com.rohidekar.callgraph.calls.RootFinder;
+import com.rohidekar.callgraph.calls.RootsVisitor;
 import com.rohidekar.callgraph.common.*;
 
 import dnl.utils.text.tree.TextTree;
@@ -13,7 +18,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.ClassUtils;
 
-public class RelationshipToGraphTransformerPackages {
+class RelationshipToGraphTransformerPackages {
 
 
   public static void printPackages(Relationships relationships) {

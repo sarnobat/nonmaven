@@ -9,7 +9,7 @@ import javax.swing.table.TableModel;
  * @author Daniel Orr
  * 
  */
-public class TextTreeTable extends TextTable {
+class TextTreeTable extends TextTable {
 
 	protected int hierarchicalColumn;
 	

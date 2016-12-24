@@ -3,16 +3,14 @@
 package com.rohidekar.callgraph;
 
 import com.rohidekar.callgraph.calls.RelationshipToGraphTransformerCallHierarchy;
-import com.rohidekar.callgraph.common.Relationships;
-import com.rohidekar.callgraph.containments.RelationshipToGraphTransformerContainments;
-import com.rohidekar.callgraph.packages.RelationshipToGraphTransformerPackages;
+import com.rohidekar.callgraph.calls.Relationships;
 
 /**
  * put -Xmx1024m in the VM args
  *
  * @author ssarnobat@google.com (Sridhar Sarnobat)
  */
-public class Main {
+class Main {
 //  private static Logger log = Logger.getLogger(Main.class);
   // TODO (feature):add call relationship between 
   // TODO (feature): build containment hierarchy using import statements

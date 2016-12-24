@@ -1,5 +1,6 @@
 package com.rohidekar.callgraph.containments;
 
+import com.rohidekar.callgraph.calls.GraphNode;
 import com.rohidekar.callgraph.common.*;
 import java.util.HashMap;
 import java.util.Map;

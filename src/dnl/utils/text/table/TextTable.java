@@ -15,7 +15,7 @@ import javax.swing.table.TableRowSorter;
  * @author Daniel Orr
  * 
  */
-public class TextTable {
+class TextTable {
 
 	protected TableModel tableModel;
 	protected List<SeparatorPolicy> separatorPolicies = new ArrayList<SeparatorPolicy>();

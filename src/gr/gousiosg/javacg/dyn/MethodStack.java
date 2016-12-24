@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-public class MethodStack {
+class MethodStack {
 
     private static Stack<String> stack = new Stack<String>();
     private static Map<Pair<String, String>, Integer> callgraph = new HashMap<Pair<String,String>, Integer>();
