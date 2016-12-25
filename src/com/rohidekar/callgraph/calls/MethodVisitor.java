@@ -48,6 +48,7 @@ import org.apache.bcel.generic.ReturnInstruction;
  * 
  * Class copied with modifications from CJKM: http://www.spinellis.gr/sw/ckjm/
  */
+// This can only be folded once you get the latest version of BCEL
 public class MethodVisitor extends EmptyVisitor {
 
     JavaClass visitedClass;

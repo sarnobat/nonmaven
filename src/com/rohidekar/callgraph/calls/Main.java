@@ -84,6 +84,23 @@ public class Main {
 
 	private static class Relationships {
 
+		private static class MethodVisitor1 extends EmptyVisitor {
+
+		    JavaClass visitedClass;
+		    private MethodGen mg;
+		    private ConstantPoolGen cp;
+		    private String format;
+
+		    public MethodVisitor1(MethodGen m, JavaClass jc) {
+		        visitedClass = jc;
+		        mg = m;
+		        cp = mg.getConstantPool();
+		        format = "M:" + visitedClass.getClassName() + ":" + mg.getName() 
+		            + " " + "(%s)%s:%s";
+		    }
+		    
+
+		}
 		private static class ClassVisitor extends EmptyVisitor {
 
 		    private JavaClass clazz;
