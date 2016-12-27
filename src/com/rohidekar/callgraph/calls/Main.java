@@ -65,7 +65,8 @@ public class Main {
 			// "/Users/ssarnobat/work/src/saas/services/plancycle/target";
 			// resource =
 			// "/sarnobat.garagebandbroken/eclipse.git/bin/main/java/";
-			resource = "/sarnobat.garagebandbroken/Desktop/github-repositories/fuse-java-helloworld-not-groovy/maven/fuse4j-core/target/classes/";
+			//resource = "/sarnobat.garagebandbroken/Desktop/github-repositories/fuse-java-helloworld-not-groovy/maven/fuse4j-core/target/classes/";
+			resource = "/sarnobat.garagebandbroken/trash/jsch-nio/target/classes";
 			// resource = "/Users/ssarnobat/github/nanohttpd/target";
 			// resource = "/Users/ssarnobat/github/java_callgraph_csv/target";
 			// TODO: use the current working directory as the class folder, not
